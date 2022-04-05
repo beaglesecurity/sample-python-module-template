@@ -1,0 +1,43 @@
+name: Build and publish modules
+on:
+  push:
+    tags:
+      - "*"
+jobs:
+  release-module:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+        with:
+          python-version: '3.x'
+      - name: Checkout PyPi repo
+        uses: actions/checkout@v2
+        with:
+          repository: beaglesecurity/private-pypi-template
+          token: ${{ secrets.TEST_CASE_BUILDER_PAT }}
+          path: pypi
+          ref: master
+      - name: Build
+        run: |
+          pip install wheel
+          python setup.py bdist bdist_wheel
+          cp dist/* pypi/sample-module/
+          pypiUrl=https://pypi.yourdomain.com/sample-module/
+          files=($(ls dist))
+          cd pypi
+          lines=$(wc -l sample-module/index.html | awk '{ print $1 }')
+          for pyModule in ${files[@]}
+          do
+              sed -i ''$lines' i <a href="'$pypiUrl$pyModule'" data-requires-python="&gt;=3.6.0">'$pypiUrl$pyModule'</a>' sample-module/index.html
+          done
+      - name: Publish
+        run: |
+          git config --global user.name "Module Builder"
+          git config --global user.email "builder@youremail.com"
+
+          cd pypi
+          git add -A
+          git commit -m 'Add new module version for sample-module'
+          git push origin master
