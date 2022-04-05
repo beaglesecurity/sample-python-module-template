@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: beaglesecurity/private-pypi-template
-          token: ${{ secrets.TEST_CASE_BUILDER_PAT }}
+          token: ${{ secrets.MODULE_BUILDER_PAT }}
           path: pypi
           ref: master
       - name: Build
