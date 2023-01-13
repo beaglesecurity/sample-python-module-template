@@ -15,7 +15,7 @@ jobs:
       - name: Checkout PyPi repo
         uses: actions/checkout@v2
         with:
-          repository: beaglesecurity/private-pypi-template
+          repository: beaglesecurity/beagle-pypi-private
           token: ${{ secrets.TEST_CASE_BUILDER_PAT }}
           path: pypi
           ref: master
@@ -23,21 +23,23 @@ jobs:
         run: |
           pip install wheel
           python setup.py bdist bdist_wheel
-          cp dist/* pypi/sample-module/
-          pypiUrl=https://pypi.yourdomain.com/sample-module/
+          moduleName=${{ github.event.repository.name }}
+          moduleName=${moduleName::-7}
+          cp dist/* pypi/$moduleName/
+          pypiUrl=https://pypi.beaglesecure.com/$moduleName/
           files=($(ls dist))
           cd pypi
-          lines=$(wc -l sample-module/index.html | awk '{ print $1 }')
+          lines=$(wc -l $moduleName/index.html | awk '{ print $1 }')
           for pyModule in ${files[@]}
           do
-              sed -i ''$lines' i <a href="'$pypiUrl$pyModule'" data-requires-python="&gt;=3.6.0">'$pypiUrl$pyModule'</a>' sample-module/index.html
+              sed -i ''$lines' i <a href="'$pypiUrl$pyModule'" data-requires-python="&gt;=3.6.0">'$pypiUrl$pyModule'</a>' $moduleName/index.html 
           done
       - name: Publish
         run: |
-          git config --global user.name "Module Builder"
-          git config --global user.email "builder@youremail.com"
+          git config --global user.name "Beagle Builder"
+          git config --global user.email "info+builder@beaglesecurity.com"
 
           cd pypi
           git add -A
-          git commit -m 'Add new module version for sample-module'
+          git commit -m 'Add new module version for '${{ github.event.repository.name }}
           git push origin master
